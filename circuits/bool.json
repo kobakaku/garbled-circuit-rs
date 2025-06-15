@@ -1,0 +1,41 @@
+{
+  "name": "bool",
+  "circuits": [
+    {
+      "id": "AND",
+      "alice": [1],
+      "bob": [2],
+      "out": [3],
+      "gates": [
+        {"id": 3, "type": "AND", "in": [1, 2]}
+      ]
+    },
+    {
+      "id": "OR", 
+      "alice": [1],
+      "bob": [2],
+      "out": [3],
+      "gates": [
+        {"id": 3, "type": "OR", "in": [1, 2]}
+      ]
+    },
+    {
+      "id": "NOT",
+      "alice": [1],
+      "out": [2],
+      "gates": [
+        {"id": 2, "type": "NOT", "in": [1]}
+      ]
+    },
+    {
+      "id": "AND and OR",
+      "alice": [1, 2],
+      "bob": [3],
+      "out": [5],
+      "gates": [
+        {"id": 4, "type": "AND", "in": [1, 2]},
+        {"id": 5, "type": "OR", "in": [4, 3]}
+      ]
+    }
+  ]
+}

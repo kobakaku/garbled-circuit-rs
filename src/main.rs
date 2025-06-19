@@ -17,9 +17,10 @@ fn main() {
 
     if args.len() < 2 {
         eprintln!(
-            "Usage: {} <circuit_index> [alice_input] [bob_input] [--ot]",
+            "Usage: {} [circuit_file.json] <circuit_index> [alice_input] [bob_input] [--ot]",
             args[0]
         );
+        eprintln!("  circuit_file.json: Optional JSON file containing circuits (default: circuits/bool.json)");
         eprintln!("  circuit_index: 0-based index of the circuit to evaluate");
         eprintln!("  alice_input: Binary string for Alice's input (e.g., '10' for inputs 1,0)");
         eprintln!("  bob_input: Binary string for Bob's input (e.g., '1' for input 1)");
@@ -33,20 +34,36 @@ fn main() {
             "  {} 0 1 1 --ot # Run circuit 0 with Alice=1, Bob=1 (with OT)",
             args[0]
         );
+        eprintln!(
+            "  {} circuits/max.json 0 11 00 # Run max circuit with custom file",
+            args[0]
+        );
         std::process::exit(1);
     }
 
+    // Check if first argument is a JSON file
+    let (json_file, start_arg_idx) = if args.len() > 1 && args[1].ends_with(".json") {
+        (args[1].clone(), 2)
+    } else {
+        ("circuits/bool.json".to_string(), 1)
+    };
+
     // Parse circuit index
-    let circuit_index: usize = match args[1].parse() {
-        Ok(idx) => idx,
-        Err(_) => {
-            eprintln!("Error: Invalid circuit index '{}'", args[1]);
-            std::process::exit(1);
+    let circuit_index: usize = if start_arg_idx < args.len() {
+        match args[start_arg_idx].parse() {
+            Ok(idx) => idx,
+            Err(_) => {
+                eprintln!("Error: Invalid circuit index '{}'", args[start_arg_idx]);
+                std::process::exit(1);
+            }
         }
+    } else {
+        eprintln!("Error: Missing circuit index");
+        std::process::exit(1);
     };
 
     // Load circuits from JSON file
-    let json_path = Path::new("circuits/bool.json");
+    let json_path = Path::new(&json_file);
     let circuits = match Circuit::from_json_file(&json_path) {
         Ok(circuits) => circuits,
         Err(e) => {
@@ -72,8 +89,8 @@ fn main() {
     let circuit = &circuits[circuit_index];
 
     // Parse Alice's input if provided
-    let alice_input = if args.len() > 2 && &args[2] != "--ot" {
-        match parse_binary_string(&args[2]) {
+    let alice_input = if args.len() > start_arg_idx + 1 && &args[start_arg_idx + 1] != "--ot" {
+        match parse_binary_string(&args[start_arg_idx + 1]) {
             Ok(bits) => Some(bits),
             Err(e) => {
                 eprintln!("Error in Alice's input: {}", e);
@@ -86,8 +103,8 @@ fn main() {
 
     // Parse Bob's input if provided
     // Need to check if the argument is --ot flag or actual input
-    let bob_input = if args.len() > 3 && &args[3] != "--ot" {
-        match parse_binary_string(&args[3]) {
+    let bob_input = if args.len() > start_arg_idx + 2 && &args[start_arg_idx + 2] != "--ot" {
+        match parse_binary_string(&args[start_arg_idx + 2]) {
             Ok(bits) => Some(bits),
             Err(e) => {
                 eprintln!("Error in Bob's input: {}", e);

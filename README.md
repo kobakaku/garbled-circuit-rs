@@ -54,10 +54,11 @@ make help
 ### Command Line Interface
 
 ```bash
-cargo run <circuit_index> [alice_input] [bob_input] [--ot]
+cargo run -- [circuit_file.json] <circuit_index> [alice_input] [bob_input] [--ot]
 ```
 
 Parameters:
+- `circuit_file.json`: Optional JSON file containing circuits (default: circuits/bool.json)
 - `circuit_index`: 0-based index of the circuit to evaluate (required)
 - `alice_input`: Binary string for Alice's input (e.g., '10' for inputs 1,0)
 - `bob_input`: Binary string for Bob's input (e.g., '1' for input 1)
@@ -67,25 +68,28 @@ Parameters:
 
 ```bash
 # Run AND circuit with Alice=1, Bob=1
-cargo run 0 1 1
+cargo run -- 0 1 1
 
 # Run OR circuit with Alice=1, Bob=0
-cargo run 1 1 0
+cargo run -- 1 1 0
 
 # Run NOT circuit with Alice=1 (no Bob input needed)
-cargo run 2 1
+cargo run -- 2 1
 
 # Run AND and OR circuit with Alice=11 (2 bits), Bob=1
-cargo run 3 11 1
+cargo run -- 3 11 1
 
 # Run with Oblivious Transfer protocol
-cargo run 0 1 1 --ot
+cargo run -- 0 1 1 --ot
+
+# Run with custom circuit file
+cargo run -- circuits/max.json 0 11 00
 
 # Show usage and list available circuits
 cargo run
 ```
 
-The program loads circuits from the `circuits/bool.json` file and evaluates the specified circuit with the provided inputs.
+The program loads circuits from the `circuits/bool.json` file by default, or from a specified JSON file if provided.
 
 ## Circuit Format
 
@@ -176,17 +180,21 @@ Alice[1]=1 Bob[2]=1  Output[3]=1
 ### Using Cargo directly
 
 ```bash
-$ cargo run 0 1 1
+$ cargo run -- 0 1 1
 Alice[1]=1 Bob[2]=1  Output[3]=1 
 
-$ cargo run 0 1 1 --ot
+$ cargo run -- 0 1 1 --ot
 Alice[1]=1 Bob[2]=1  Output[3]=1 
 
-$ cargo run 3 10 1 --ot
+$ cargo run -- 3 10 1 --ot
 Alice[1]=0 [2]=1 Bob[3]=1  Output[5]=1 
 
+$ cargo run -- circuits/max.json 0 11 00
+Alice[1]=1 [2]=1 Bob[3]=0 [4]=0  Output[10]=1 [19]=1
+
 $ cargo run
-Usage: target/debug/garbled_circuit_rs <circuit_index> [alice_input] [bob_input] [--ot]
+Usage: target/debug/garbled_circuit_rs [circuit_file.json] <circuit_index> [alice_input] [bob_input] [--ot]
+  circuit_file.json: Optional JSON file containing circuits (default: circuits/bool.json)
   circuit_index: 0-based index of the circuit to evaluate
   alice_input: Binary string for Alice's input (e.g., '10' for inputs 1,0)
   bob_input: Binary string for Bob's input (e.g., '1' for input 1)
@@ -195,6 +203,7 @@ Usage: target/debug/garbled_circuit_rs <circuit_index> [alice_input] [bob_input]
 Examples:
   target/debug/garbled_circuit_rs 0 1 1      # Run circuit 0 with Alice=1, Bob=1 (standard)
   target/debug/garbled_circuit_rs 0 1 1 --ot # Run circuit 0 with Alice=1, Bob=1 (with OT)
+  target/debug/garbled_circuit_rs circuits/max.json 0 11 00 # Run max circuit with custom file
 ```
 
 ## Educational Purpose

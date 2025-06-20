@@ -1,7 +1,7 @@
 use crate::circuit::Circuit;
 use crate::garbled::GarbledCircuit;
 use crate::key::Key;
-use crate::ot::{OTReceiver, OTSender};
+use oblivious_transfer_rs::{OTReceiver, OTSender};
 use std::collections::HashMap;
 
 /// Alice's side of the garbled circuit protocol

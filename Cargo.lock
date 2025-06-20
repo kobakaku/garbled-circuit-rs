@@ -107,6 +107,7 @@ version = "0.1.0"
 dependencies = [
  "aes-gcm",
  "hex",
+ "oblivious-transfer-rs",
  "rand",
  "serde",
  "serde_json",
@@ -176,6 +177,14 @@ name = "memchr"
 version = "2.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32a282da65faaf38286cf3be983213fcf1d2e2a58700e808f83f4ea9a4804bc0"
+
+[[package]]
+name = "oblivious-transfer-rs"
+version = "0.1.0"
+source = "git+https://github.com/kobakaku/oblivious-transfer-rs?rev=cbdd11c#cbdd11cd14a620cb95792aa9f087e09db8c3aba3"
+dependencies = [
+ "rand",
+]
 
 [[package]]
 name = "opaque-debug"

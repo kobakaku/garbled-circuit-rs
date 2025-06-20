@@ -62,3 +62,9 @@ impl Key {
         }
     }
 }
+
+impl Default for Key {
+    fn default() -> Self {
+        Self::new()
+    }
+}

@@ -64,7 +64,7 @@ fn main() {
 
     // Load circuits from JSON file
     let json_path = Path::new(&json_file);
-    let circuits = match Circuit::from_json_file(&json_path) {
+    let circuits = match Circuit::from_json_file(json_path) {
         Ok(circuits) => circuits,
         Err(e) => {
             eprintln!("Error: Failed to load {}: {}", json_path.display(), e);

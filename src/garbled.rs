@@ -2,6 +2,9 @@ use crate::circuit::{Circuit, Gate};
 use crate::key::Key;
 use std::collections::HashMap;
 
+// AES key size in bytes
+const AES_KEY_SIZE: usize = 16;
+
 /// Parse and validate input bits for a party's wires
 pub fn prepare_party_inputs(
     input_bits: &Option<Vec<u8>>,
@@ -55,15 +58,17 @@ impl GarbledGate {
         garbled_gate
     }
 
-    fn create_and_table(&mut self, keys: &HashMap<u32, (Key, Key)>) {
+    fn create_binary_gate_table<F>(&mut self, keys: &HashMap<u32, (Key, Key)>, truth_table: F)
+    where
+        F: Fn(u8, u8) -> u8,
+    {
         let in_a = self.inputs[0];
         let in_b = self.inputs[1];
         let output_keys = keys.get(&self.id).unwrap();
 
-        // Truth table for AND: 00->0, 01->0, 10->0, 11->1
         for a_bit in 0..2 {
             for b_bit in 0..2 {
-                let result_bit = if a_bit == 1 && b_bit == 1 { 1 } else { 0 };
+                let result_bit = truth_table(a_bit, b_bit);
 
                 let key_a = if a_bit == 0 {
                     &keys[&in_a].0
@@ -91,39 +96,14 @@ impl GarbledGate {
         }
     }
 
+    fn create_and_table(&mut self, keys: &HashMap<u32, (Key, Key)>) {
+        // Truth table for AND: 00->0, 01->0, 10->0, 11->1
+        self.create_binary_gate_table(keys, |a, b| if a == 1 && b == 1 { 1 } else { 0 });
+    }
+
     fn create_or_table(&mut self, keys: &HashMap<u32, (Key, Key)>) {
-        let in_a = self.inputs[0];
-        let in_b = self.inputs[1];
-        let output_keys = keys.get(&self.id).unwrap();
-
         // Truth table for OR: 00->0, 01->1, 10->1, 11->1
-        for a_bit in 0..2 {
-            for b_bit in 0..2 {
-                let result_bit = if a_bit == 1 || b_bit == 1 { 1 } else { 0 };
-
-                let key_a = if a_bit == 0 {
-                    &keys[&in_a].0
-                } else {
-                    &keys[&in_a].1
-                };
-                let key_b = if b_bit == 0 {
-                    &keys[&in_b].0
-                } else {
-                    &keys[&in_b].1
-                };
-                let output_key = if result_bit == 0 {
-                    &output_keys.0
-                } else {
-                    &output_keys.1
-                };
-
-                let encrypted_once = key_a.encrypt_with_magic(&output_key.0);
-                let encrypted_twice = key_b.encrypt_with_magic(&encrypted_once);
-
-                let index = vec![a_bit, b_bit];
-                self.garbled_table.insert(index, encrypted_twice);
-            }
-        }
+        self.create_binary_gate_table(keys, |a, b| if a == 1 || b == 1 { 1 } else { 0 });
     }
 
     fn create_not_table(&mut self, keys: &HashMap<u32, (Key, Key)>) {
@@ -242,9 +222,9 @@ impl GarbledCircuit {
                             if let Ok(decrypted) =
                                 input_key.decrypt_with_magic_verification(encrypted)
                             {
-                                if decrypted.len() >= 16 {
-                                    let mut key_bytes = [0u8; 16];
-                                    key_bytes.copy_from_slice(&decrypted[0..16]);
+                                if decrypted.len() >= AES_KEY_SIZE {
+                                    let mut key_bytes = [0u8; AES_KEY_SIZE];
+                                    key_bytes.copy_from_slice(&decrypted[0..AES_KEY_SIZE]);
                                     wire_values.insert(gate.id, Key(key_bytes));
                                     break;
                                 }
@@ -268,9 +248,9 @@ impl GarbledCircuit {
                                     if let Ok(decrypted) =
                                         key_a.decrypt_with_magic_verification(&encrypted_once)
                                     {
-                                        if decrypted.len() >= 16 {
-                                            let mut key_bytes = [0u8; 16];
-                                            key_bytes.copy_from_slice(&decrypted[0..16]);
+                                        if decrypted.len() >= AES_KEY_SIZE {
+                                            let mut key_bytes = [0u8; AES_KEY_SIZE];
+                                            key_bytes.copy_from_slice(&decrypted[0..AES_KEY_SIZE]);
                                             wire_values.insert(gate.id, Key(key_bytes));
                                             found = true;
                                             break;

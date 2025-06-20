@@ -4,6 +4,9 @@ use crate::key::Key;
 use crate::ot::{OTReceiver, OTSender};
 use std::collections::HashMap;
 
+// AES key size in bytes
+const AES_KEY_SIZE: usize = 16;
+
 /// Alice's side of the garbled circuit protocol
 pub struct Alice {
     pub circuit: Circuit,
@@ -69,9 +72,9 @@ impl Alice {
                     receiver.receive_encrypted_messages(encrypted_messages);
                     let decrypted_key_bytes = receiver.decrypt_message(decryption_key);
 
-                    if decrypted_key_bytes.len() >= 16 {
-                        let mut key_array = [0u8; 16];
-                        key_array.copy_from_slice(&decrypted_key_bytes[0..16]);
+                    if decrypted_key_bytes.len() >= AES_KEY_SIZE {
+                        let mut key_array = [0u8; AES_KEY_SIZE];
+                        key_array.copy_from_slice(&decrypted_key_bytes[0..AES_KEY_SIZE]);
                         keys_for_bob.insert(wire_id, Key(key_array));
                     }
                 }

@@ -1,6 +1,6 @@
 # Garbled Circuit Implementation in Rust
 
-This is a simplified implementation of Yao's Garbled Circuit protocol in Rust, designed for educational purposes and proof-of-concept demonstrations.
+This is a simplified implementation of Yao's Garbled Circuit protocol in Rust, designed for learning purposes and proof-of-concept demonstrations.
 
 ## Generation and References
 
@@ -38,6 +38,7 @@ make and      # Test all AND gate combinations
 make or       # Test all OR gate combinations
 make not      # Test all NOT gate combinations
 make and-or   # Test complex AND and OR circuit combinations
+make max      # Test 2-bit MAX circuit with all combinations
 make all      # Run all standard tests
 
 # With Oblivious Transfer protocol
@@ -45,6 +46,7 @@ make and-ot      # Test AND gate with OT protocol
 make or-ot       # Test OR gate with OT protocol
 make not-ot      # Test NOT gate with OT protocol
 make and-or-ot   # Test complex circuit with OT protocol
+make max-ot      # Test 2-bit MAX circuit with OT protocol
 make all-ot      # Run all tests with OT protocol
 
 # Show available commands
@@ -128,9 +130,8 @@ The program expects a `circuits/bool.json` file in the current directory contain
    - Provides integrity checking for garbled circuit evaluation
 
 2. **Oblivious Transfer (OT) Protocol**
-   - Basic 1-out-of-2 OT implementation for secure key exchange
-   - Alice can transfer keys corresponding to her inputs without revealing them
-   - Educational implementation demonstrating OT concepts
+   - Classical RSA-based 1-out-of-2 OT implementation
+   - Bob uses OT to receive his input keys without revealing his choices to Alice
    - Use `--ot` flag to enable OT-based evaluation
 
 ### Known Limitations
@@ -175,6 +176,25 @@ Alice[1]=0 Bob[2]=0  Output[3]=0
 Alice[1]=0 Bob[2]=1  Output[3]=1 
 Alice[1]=1 Bob[2]=0  Output[3]=1 
 Alice[1]=1 Bob[2]=1  Output[3]=1 
+
+$ make max
+======== MAX (2-bit) ========
+Alice[1]=0 [2]=0 Bob[3]=0 [4]=0  Output[10]=0 [19]=0 
+Alice[1]=0 [2]=0 Bob[3]=0 [4]=1  Output[10]=0 [19]=1 
+Alice[1]=0 [2]=0 Bob[3]=1 [4]=0  Output[10]=1 [19]=0 
+Alice[1]=0 [2]=0 Bob[3]=1 [4]=1  Output[10]=1 [19]=1 
+Alice[1]=0 [2]=1 Bob[3]=0 [4]=0  Output[10]=0 [19]=1 
+Alice[1]=0 [2]=1 Bob[3]=0 [4]=1  Output[10]=0 [19]=1 
+Alice[1]=0 [2]=1 Bob[3]=1 [4]=0  Output[10]=1 [19]=0 
+Alice[1]=0 [2]=1 Bob[3]=1 [4]=1  Output[10]=1 [19]=1 
+Alice[1]=1 [2]=0 Bob[3]=0 [4]=0  Output[10]=1 [19]=0 
+Alice[1]=1 [2]=0 Bob[3]=0 [4]=1  Output[10]=1 [19]=0 
+Alice[1]=1 [2]=0 Bob[3]=1 [4]=0  Output[10]=1 [19]=0 
+Alice[1]=1 [2]=0 Bob[3]=1 [4]=1  Output[10]=1 [19]=1 
+Alice[1]=1 [2]=1 Bob[3]=0 [4]=0  Output[10]=1 [19]=1 
+Alice[1]=1 [2]=1 Bob[3]=0 [4]=1  Output[10]=1 [19]=1 
+Alice[1]=1 [2]=1 Bob[3]=1 [4]=0  Output[10]=1 [19]=1 
+Alice[1]=1 [2]=1 Bob[3]=1 [4]=1  Output[10]=1 [19]=1
 ```
 
 ### Using Cargo directly
@@ -206,22 +226,6 @@ Examples:
   target/debug/garbled_circuit_rs circuits/max.json 0 11 00 # Run max circuit with custom file
 ```
 
-## Educational Purpose
-
-This implementation prioritizes:
-- **Clarity** over efficiency
-- **Simplicity** over security
-- **Understanding** over optimization
-
-For production use, implement the missing security features listed above.
-
-## Dependencies
-
-- `serde` - Serialization framework
-- `rand` - Random number generation
-- `aes-gcm` - AES-GCM encryption
-- `hex` - Hexadecimal encoding/decoding
-
 ## License
 
-This project is for educational purposes. Please implement proper security measures before any production use.
+This project is for learning purposes. Please implement proper security measures before any production use.

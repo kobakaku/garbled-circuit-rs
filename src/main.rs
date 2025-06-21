@@ -133,6 +133,7 @@ fn main() {
     // Choose evaluation method based on OT flag
     let result = if use_ot {
         execute_secure_protocol(circuit.clone(), alice_inputs, bob_inputs)
+            .expect("Failed to execute secure protocol")
     } else {
         garbled_circuit.evaluate(&alice_inputs, &bob_inputs)
     };

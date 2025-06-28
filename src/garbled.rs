@@ -5,32 +5,6 @@ use std::collections::HashMap;
 // AES key size in bytes
 const AES_KEY_SIZE: usize = 16;
 
-/// Parse and validate input bits for a party's wires
-pub fn prepare_party_inputs(
-    input_bits: &Option<Vec<u8>>,
-    wires: &[u32],
-    party_name: &str,
-) -> HashMap<u32, u8> {
-    let mut inputs = HashMap::new();
-
-    if let Some(bits) = input_bits.as_ref() {
-        if bits.len() != wires.len() {
-            eprintln!(
-                "Error: {} input length {} doesn't match circuit requirement {}",
-                party_name,
-                bits.len(),
-                wires.len()
-            );
-            std::process::exit(1);
-        }
-        for (i, &wire) in wires.iter().enumerate() {
-            inputs.insert(wire, bits[i]);
-        }
-    }
-
-    inputs
-}
-
 #[derive(Clone, Debug)]
 pub struct GarbledGate {
     pub id: u32,
@@ -170,43 +144,6 @@ impl GarbledCircuit {
         }
     }
 
-    /// Prepare initial wire keys for evaluation
-    fn prepare_input_keys(
-        &self,
-        alice_inputs: &HashMap<u32, u8>,
-        bob_inputs: &HashMap<u32, u8>,
-    ) -> HashMap<u32, Key> {
-        let mut wire_values: HashMap<u32, Key> = HashMap::new();
-
-        // Set Alice's input keys
-        if let Some(ref alice_wires) = self.circuit.alice {
-            for &wire in alice_wires {
-                let bit = alice_inputs.get(&wire).unwrap();
-                let key = if *bit == 0 {
-                    &self.keys[&wire].0
-                } else {
-                    &self.keys[&wire].1
-                };
-                wire_values.insert(wire, key.clone());
-            }
-        }
-
-        // Set Bob's input keys
-        if let Some(ref bob_wires) = self.circuit.bob {
-            for &wire in bob_wires {
-                let bit = bob_inputs.get(&wire).unwrap();
-                let key = if *bit == 0 {
-                    &self.keys[&wire].0
-                } else {
-                    &self.keys[&wire].1
-                };
-                wire_values.insert(wire, key.clone());
-            }
-        }
-
-        wire_values
-    }
-
     /// Evaluate all gates given initial wire values
     pub fn evaluate_gates(&self, mut wire_values: HashMap<u32, Key>) -> HashMap<u32, Key> {
         // Evaluate gates in order
@@ -282,26 +219,85 @@ impl GarbledCircuit {
                 } else if result_key == &output_keys.1 {
                     results.insert(output_wire, 1);
                 } else {
-                    panic!("Unable to determine output for wire {}", output_wire);
+                    panic!("Unable to determine output for wire {output_wire}");
                 }
             }
         }
         results
     }
 
-    /// Standard evaluation of garbled circuit
-    pub fn evaluate(
-        &self,
-        alice_inputs: &HashMap<u32, u8>,
-        bob_inputs: &HashMap<u32, u8>,
-    ) -> HashMap<u32, u8> {
-        let initial_keys = self.prepare_input_keys(alice_inputs, bob_inputs);
-        let final_keys = self.evaluate_gates(initial_keys);
-        self.extract_outputs(&final_keys)
-    }
-
     /// Get keys for debugging purposes (not secure in real protocol)
     pub fn get_all_keys(&self) -> &HashMap<u32, (Key, Key)> {
         &self.keys
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::circuit::{Circuit, Gate};
+
+    fn create_test_and_circuit() -> Circuit {
+        Circuit {
+            id: "test_and".to_string(),
+            gates: vec![Gate {
+                id: 3,
+                gate_type: "AND".to_string(),
+                inputs: vec![1, 2],
+            }],
+            alice: Some(vec![1]),
+            bob: Some(vec![2]),
+            out: vec![3],
+        }
+    }
+
+    #[test]
+    fn test_garbled_circuit_creation() {
+        let circuit = create_test_and_circuit();
+        let garbled_circuit = GarbledCircuit::new(circuit.clone());
+
+        assert_eq!(garbled_circuit.circuit.id, "test_and");
+        assert_eq!(garbled_circuit.garbled_gates.len(), 1);
+        assert_eq!(garbled_circuit.garbled_gates[0].gate_type, "AND");
+
+        // Should have keys for all wires (1, 2, 3)
+        assert!(garbled_circuit.keys.contains_key(&1));
+        assert!(garbled_circuit.keys.contains_key(&2));
+        assert!(garbled_circuit.keys.contains_key(&3));
+    }
+
+    #[test]
+    fn test_garbled_gate_table_creation() {
+        let circuit = create_test_and_circuit();
+        let garbled_circuit = GarbledCircuit::new(circuit);
+
+        let garbled_gate = &garbled_circuit.garbled_gates[0];
+
+        // AND gate should have 4 entries in garbled table (2^2 combinations)
+        assert_eq!(garbled_gate.garbled_table.len(), 4);
+
+        // Check that all possible input combinations exist
+        for a in 0..2 {
+            for b in 0..2 {
+                let index = vec![a, b];
+                assert!(garbled_gate.garbled_table.contains_key(&index));
+            }
+        }
+    }
+
+    #[test]
+    fn test_wire_key_consistency() {
+        let circuit = create_test_and_circuit();
+        let garbled_circuit = GarbledCircuit::new(circuit);
+
+        // Get all keys
+        let keys = garbled_circuit.get_all_keys();
+
+        // Each wire should have exactly 2 keys (for 0 and 1)
+        for (wire_id, (key0, key1)) in keys {
+            assert_ne!(key0, key1, "Keys for wire {} should be different", wire_id);
+            assert_eq!(key0.0.len(), 16, "Key should be 16 bytes");
+            assert_eq!(key1.0.len(), 16, "Key should be 16 bytes");
+        }
     }
 }

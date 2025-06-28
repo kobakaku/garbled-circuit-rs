@@ -11,4 +11,4 @@ sha2 = "0.10"
 aes-gcm = "0.10"
 hex = "0.4"
 anyhow = "1.0"
-oblivious-transfer-rs = { git = "https://github.com/kobakaku/oblivious-transfer-rs", rev = "b09a57d" }
+oblivious-transfer-rs = { git = "https://github.com/kobakaku/oblivious-transfer-rs", rev = "570ea6abf204b1b01ab2d6851d83807878f23f24" }

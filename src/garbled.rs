@@ -25,6 +25,7 @@ impl GarbledGate {
         match gate.gate_type.as_str() {
             "AND" => garbled_gate.create_and_table(keys),
             "OR" => garbled_gate.create_or_table(keys),
+            "XOR" => garbled_gate.create_xor_table(keys),
             "NOT" => garbled_gate.create_not_table(keys),
             _ => panic!("Unsupported gate type: {}", gate.gate_type),
         }
@@ -78,6 +79,11 @@ impl GarbledGate {
     fn create_or_table(&mut self, keys: &HashMap<u32, (Key, Key)>) {
         // Truth table for OR: 00->0, 01->1, 10->1, 11->1
         self.create_binary_gate_table(keys, |a, b| if a == 1 || b == 1 { 1 } else { 0 });
+    }
+
+    fn create_xor_table(&mut self, keys: &HashMap<u32, (Key, Key)>) {
+        // Truth table for XOR: 00->0, 01->1, 10->1, 11->0
+        self.create_binary_gate_table(keys, |a, b| a ^ b);
     }
 
     fn create_not_table(&mut self, keys: &HashMap<u32, (Key, Key)>) {
@@ -169,7 +175,7 @@ impl GarbledCircuit {
                         }
                     }
                 }
-                "AND" | "OR" => {
+                "AND" | "OR" | "XOR" => {
                     let key_a = wire_values[&gate.inputs[0]].clone();
                     let key_b = wire_values[&gate.inputs[1]].clone();
 

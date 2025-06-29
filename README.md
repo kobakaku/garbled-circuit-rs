@@ -12,7 +12,7 @@ This implementation is based on and references the following repository:
 ## Features
 
 - **Secure Two-Party Computation**: Mandatory use of Oblivious Transfer protocol for all evaluations
-- **Basic Logic Gates**: Supports AND, OR, and NOT gates
+- **Basic Logic Gates**: Supports AND, OR, XOR, and NOT gates
 - **Modular Design**: Clean separation of concerns with separate modules for keys, circuits, and garbled operations
 - **Magic Bytes Security**: Built-in verification to prevent acceptance of invalid decryption results
 - **Privacy Preserving**: Bob's inputs remain private through OT protocol
@@ -53,6 +53,9 @@ cargo run -- 0 1 1
 # Run OR circuit with Alice=1, Bob=0
 cargo run -- 1 1 0
 
+# Run XOR circuit with Alice=1, Bob=0  
+cargo run -- 2 1 0
+
 # Run AND and OR circuit with Alice=11 (2 bits), Bob=1
 cargo run -- 3 11 1
 
@@ -81,7 +84,7 @@ Circuits are loaded from JSON files with the following structure:
     "gates": [
       {
         "id": 5,          // Gate output wire ID
-        "gate_type": "AND", // Gate type (AND, OR, NOT)
+        "gate_type": "AND", // Gate type (AND, OR, XOR, NOT)
         "inputs": [1, 2]  // Input wire IDs
       }
     ]
@@ -129,8 +132,8 @@ The program expects a `circuits/bool.json` file in the current directory contain
    - **Impact**: Less efficient evaluation compared to optimized versions
 
 2. **No Free XOR Optimization**
-   - XOR gates could be evaluated without garbled tables
-   - **Impact**: Unnecessary computational overhead for XOR operations
+   - XOR gates are implemented using full garbled tables
+   - **Impact**: Unnecessary computational overhead for XOR operations compared to optimized implementations
 
 3. **Bob Input Requirement**
    - All circuits must have at least one Bob input wire

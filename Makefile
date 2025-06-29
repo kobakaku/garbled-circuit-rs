@@ -4,6 +4,7 @@ help:
 	@echo "Available commands:"
 	@echo "  make and      - Run AND circuit with all input combinations"
 	@echo "  make or       - Run OR circuit with all input combinations"
+	@echo "  make xor      - Run XOR circuit with all input combinations"
 	@echo "  make not      - Run NOT circuit with all input combinations"
 	@echo "  make and-or   - Run AND and OR circuit with all input combinations"
 	@echo "  make max      - Run MAX circuit with all 2-bit input combinations"
@@ -38,6 +39,15 @@ or: build
 	@cargo run --quiet -- 1 0 1
 	@cargo run --quiet -- 1 1 0
 	@cargo run --quiet -- 1 1 1
+
+# Run XOR circuit with all combinations
+.PHONY: xor
+xor: build
+	@echo ======== XOR ========
+	@cargo run --quiet -- 2 0 0
+	@cargo run --quiet -- 2 0 1
+	@cargo run --quiet -- 2 1 0
+	@cargo run --quiet -- 2 1 1
 
 # Run NOT circuit with all combinations
 .PHONY: not
@@ -82,4 +92,4 @@ max: build
 
 # Run all standard tests
 .PHONY: all
-all: and or not and-or max
+all: and or xor not and-or max
